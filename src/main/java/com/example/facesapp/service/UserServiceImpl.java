@@ -4,7 +4,9 @@ import com.example.facesapp.config.EnvConfig;
 import com.example.facesapp.model.PasswordResetToken;
 import com.example.facesapp.model.User;
 import com.example.facesapp.model.VerificationToken;
-import com.example.facesapp.repository.UserRepository;
+import com.example.facesapp.repository.UserDataRepository;
+import com.example.facesapp.repository.VerificationTokenDataRepository;
+import com.example.facesapp.repository.PasswordResetTokenDataRepository;
 import com.example.facesapp.util.PasswordUtil;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -26,7 +28,13 @@ import jakarta.inject.Inject;
 public class UserServiceImpl implements UserService {
 
     @Inject
-    private UserRepository userRepo;
+    private UserDataRepository userRepo;
+
+    @Inject
+    private VerificationTokenDataRepository verificationTokenRepo;
+
+    @Inject
+    private PasswordResetTokenDataRepository passwordResetTokenRepo;
 
     @Inject
     private EmailService emailService;
@@ -53,7 +61,7 @@ public class UserServiceImpl implements UserService {
 
         if (env.isEmailVerificationRequired()) {
             VerificationToken token = new VerificationToken(user);
-            userRepo.saveVerificationToken(token);
+            verificationTokenRepo.save(token);
             emailService.sendVerificationEmail(user, token.getToken());
         }
 
@@ -84,7 +92,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void verifyEmail(String token) {
-        VerificationToken vt = userRepo.findVerificationToken(token)
+        VerificationToken vt = verificationTokenRepo.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid verification token."));
 
         if (vt.isUsed()) {
@@ -99,7 +107,7 @@ public class UserServiceImpl implements UserService {
         userRepo.save(user);
 
         vt.setUsed(true);
-        userRepo.updateVerificationToken(vt);
+        verificationTokenRepo.save(vt);
     }
 
     // ── requestPasswordReset ──────────────────────────────────────────────────
@@ -109,7 +117,7 @@ public class UserServiceImpl implements UserService {
         // Don't reveal whether the e-mail exists (prevents enumeration attacks).
         userRepo.findByEmail(email).ifPresent(user -> {
             PasswordResetToken token = new PasswordResetToken(user);
-            userRepo.savePasswordResetToken(token);
+            passwordResetTokenRepo.save(token);
             emailService.sendPasswordResetEmail(user, token.getToken());
         });
     }
@@ -118,7 +126,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void resetPassword(String token, String newPassword) {
-        PasswordResetToken prt = userRepo.findPasswordResetToken(token)
+        PasswordResetToken prt = passwordResetTokenRepo.findByToken(token)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset token."));
 
         if (prt.isUsed()) {
@@ -133,6 +141,6 @@ public class UserServiceImpl implements UserService {
         userRepo.save(user);
 
         prt.setUsed(true);
-        userRepo.updatePasswordResetToken(prt);
+        passwordResetTokenRepo.save(prt);
     }
 }

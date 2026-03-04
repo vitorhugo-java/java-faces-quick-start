@@ -3,7 +3,9 @@ package com.example.facesapp.unit;
 import com.example.facesapp.config.EnvConfig;
 import com.example.facesapp.model.User;
 import com.example.facesapp.model.VerificationToken;
-import com.example.facesapp.repository.UserRepository;
+import com.example.facesapp.repository.UserDataRepository;
+import com.example.facesapp.repository.VerificationTokenDataRepository;
+import com.example.facesapp.repository.PasswordResetTokenDataRepository;
 import com.example.facesapp.service.AuthException;
 import com.example.facesapp.service.EmailService;
 import com.example.facesapp.service.UserServiceImpl;
@@ -30,7 +32,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
-    @Mock private UserRepository  userRepo;
+    @Mock private UserDataRepository  userRepo;
+    @Mock private VerificationTokenDataRepository verificationTokenRepo;
+    @Mock private PasswordResetTokenDataRepository passwordResetTokenRepo;
     @Mock private EmailService    emailService;
     @Mock private EnvConfig       env;
 
@@ -49,7 +53,7 @@ class UserServiceImplTest {
             when(env.isEmailVerificationRequired()).thenReturn(true);
             when(userRepo.findByEmail("alice@example.com")).thenReturn(Optional.empty());
             when(userRepo.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
-            when(userRepo.saveVerificationToken(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(verificationTokenRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             User result = userService.register("Alice", "alice@example.com", "pass123");
 
@@ -176,9 +180,9 @@ class UserServiceImplTest {
             User user = new User("Alice", "alice@example.com", "hash");
             VerificationToken token = new VerificationToken(user);
 
-            when(userRepo.findVerificationToken(token.getToken())).thenReturn(Optional.of(token));
+            when(verificationTokenRepo.findByToken(token.getToken())).thenReturn(Optional.of(token));
             when(userRepo.save(user)).thenReturn(user);
-            doNothing().when(userRepo).updateVerificationToken(token);
+            when(verificationTokenRepo.save(token)).thenReturn(token);
 
             userService.verifyEmail(token.getToken());
 
@@ -189,7 +193,7 @@ class UserServiceImplTest {
         @Test
         @DisplayName("throws for an invalid token")
         void verifyEmail_invalidToken_throwsIllegalArgument() {
-            when(userRepo.findVerificationToken("bad-token")).thenReturn(Optional.empty());
+            when(verificationTokenRepo.findByToken("bad-token")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.verifyEmail("bad-token"))
                     .isInstanceOf(IllegalArgumentException.class);
@@ -207,7 +211,7 @@ class UserServiceImplTest {
         void requestReset_existingUser_sendsEmail() {
             User user = new User("Alice", "alice@example.com", "hash");
             when(userRepo.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
-            when(userRepo.savePasswordResetToken(any())).thenAnswer(inv -> inv.getArgument(0));
+            when(passwordResetTokenRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
             userService.requestPasswordReset("alice@example.com");
 

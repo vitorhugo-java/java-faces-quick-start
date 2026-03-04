@@ -25,6 +25,9 @@
         <!-- Hibernate (JPA implementation bundled in the WAR) -->
         <hibernate.version>6.4.10.Final</hibernate.version>
 
+        <!-- Jakarta Data -->
+        <jakarta.data.version>1.0.0</jakarta.data.version>
+
         <!-- Flyway -->
         <flyway.version>10.17.3</flyway.version>
 
