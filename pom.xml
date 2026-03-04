@@ -28,10 +28,11 @@
         <!-- MySQL -->
         <mysql.version>8.3.0</mysql.version>
 
-        <!-- Spring Batch + Spring Framework -->
-        <spring.version>6.1.14</spring.version>
-        <spring.batch.version>5.1.2</spring.batch.version>
-        <spring.security.crypto.version>6.3.8</spring.security.crypto.version>
+        <!-- Quartz Scheduler -->
+        <quartz.version>2.3.2</quartz.version>
+
+        <!-- BCrypt (standalone, no Spring) -->
+        <jbcrypt.version>0.4</jbcrypt.version>
 
         <!-- dotenv -->
         <dotenv.version>3.0.0</dotenv.version>
@@ -90,35 +91,25 @@
             <version>${dotenv.version}</version>
         </dependency>
 
-        <!-- ── Spring Framework (IoC + Scheduling) ────────────────────── -->
+        <!-- ── Quartz Scheduler (job scheduling, no Spring) ──────────────── -->
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-jdbc</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-tx</artifactId>
-            <version>${spring.version}</version>
+            <groupId>org.quartz-scheduler</groupId>
+            <artifactId>quartz</artifactId>
+            <version>${quartz.version}</version>
+            <exclusions>
+                <!-- Prefer the container's connection pooling -->
+                <exclusion>
+                    <groupId>com.mchange</groupId>
+                    <artifactId>c3p0</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
-        <!-- ── Spring Batch 5 ─────────────────────────────────────────── -->
+        <!-- ── jBCrypt – standalone BCrypt (no Spring) ────────────────────── -->
         <dependency>
-            <groupId>org.springframework.batch</groupId>
-            <artifactId>spring-batch-core</artifactId>
-            <version>${spring.batch.version}</version>
-        </dependency>
-
-        <!-- ── Spring Security Crypto (BCrypt) ────────────────────────── -->
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-crypto</artifactId>
-            <version>${spring.security.crypto.version}</version>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>${jbcrypt.version}</version>
         </dependency>
 
         <!-- ── Jakarta Mail (SMTP email sending) ─────────────────────── -->
@@ -171,20 +162,6 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>${h2.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Spring Test (launch Spring context in unit tests) -->
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
-            <version>${spring.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.batch</groupId>
-            <artifactId>spring-batch-test</artifactId>
-            <version>${spring.batch.version}</version>
             <scope>test</scope>
         </dependency>
 
