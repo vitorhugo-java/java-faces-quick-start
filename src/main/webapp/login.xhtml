@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<ui:composition template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="title">Sign In – Faces App</ui:define>
+
+    <ui:define name="content">
+        <div class="auth-container">
+            <p:card styleClass="auth-card">
+                <f:facet name="header">
+                    <h2>Sign In</h2>
+                </f:facet>
+
+                <h:form id="loginForm">
+                    <p:messages showDetail="true" closable="true"/>
+
+                    <div class="field">
+                        <p:outputLabel for="email" value="E-mail"/>
+                        <p:inputText id="email"
+                                     value="#{loginController.email}"
+                                     required="true"
+                                     requiredMessage="E-mail is required."
+                                     validatorMessage="Please enter a valid e-mail address."
+                                     styleClass="w-full">
+                            <f:validateRegex pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"/>
+                        </p:inputText>
+                        <p:message for="email"/>
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="password" value="Password"/>
+                        <p:password id="password"
+                                    value="#{loginController.password}"
+                                    required="true"
+                                    requiredMessage="Password is required."
+                                    feedback="false"
+                                    styleClass="w-full"/>
+                        <p:message for="password"/>
+                    </div>
+
+                    <div class="field-actions">
+                        <p:commandButton id="loginBtn"
+                                         value="Sign In"
+                                         action="#{loginController.login}"
+                                         ajax="false"
+                                         styleClass="p-button-primary w-full"/>
+                    </div>
+
+                    <div class="auth-links">
+                        <h:link value="Forgot password?" outcome="/forgot-password"/>
+                        <span> | </span>
+                        <h:link value="Create account" outcome="/register"/>
+                    </div>
+                </h:form>
+            </p:card>
+        </div>
+    </ui:define>
+
+</ui:composition>
+</html>

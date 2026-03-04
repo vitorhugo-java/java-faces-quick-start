@@ -1,0 +1,88 @@
+/* ── Reset & base ────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: var(--font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+    background-color: var(--surface-ground, #f4f4f4);
+    color: var(--text-color, #333);
+}
+
+/* ── App layout ──────────────────────────────────────────────────────────── */
+.app-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-topbar {
+    background: var(--primary-color, #2d8cf0) !important;
+    color: #fff !important;
+    padding: 0 1.5rem;
+}
+
+.app-brand {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.app-content {
+    flex: 1;
+    padding: 2rem 1rem;
+}
+
+.app-footer {
+    text-align: center;
+    padding: 1rem;
+    background: var(--surface-card, #fff);
+    border-top: 1px solid var(--surface-border, #ddd);
+    font-size: 0.85rem;
+    color: var(--text-color-secondary, #666);
+}
+
+/* ── Auth pages ──────────────────────────────────────────────────────────── */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 3rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+}
+
+.auth-card .p-card-body {
+    padding: 2rem;
+}
+
+.field {
+    margin-bottom: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.field-actions {
+    margin-top: 1.5rem;
+}
+
+.auth-links {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.w-full { width: 100% !important; }
+
+/* ── Dashboard ───────────────────────────────────────────────────────────── */
+.dashboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ── Status panels ───────────────────────────────────────────────────────── */
+.success-panel { border-left: 4px solid #22c55e; padding: 1rem; }
+.error-panel   { border-left: 4px solid #ef4444; padding: 1rem; }

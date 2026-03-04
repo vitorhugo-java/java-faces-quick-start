@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Isolates the WAR's bundled Hibernate and Spring libraries from WildFly's
+    own copies, preventing ClassCastExceptions and version conflicts.
+-->
+<jboss-deployment-structure>
+    <deployment>
+        <exclusions>
+            <!-- Use the WAR's bundled Hibernate, not WildFly's module -->
+            <module name="org.hibernate.orm.main"/>
+            <!-- Use the WAR's bundled Spring libraries -->
+            <module name="org.springframework.spring"/>
+        </exclusions>
+        <dependencies>
+            <!-- WildFly's Jakarta EE APIs are still provided -->
+            <module name="jakarta.faces.api" export="true"/>
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>

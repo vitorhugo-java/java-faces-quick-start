@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+<h:head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title><ui:insert name="title">Faces App</ui:insert></title>
+    <h:outputStylesheet library="primefaces" name="themes/saga/theme.css"/>
+    <h:outputStylesheet library="css" name="app.css"/>
+</h:head>
+<h:body>
+
+    <div class="app-wrapper">
+        <!-- Navigation bar -->
+        <p:toolbar styleClass="app-topbar">
+            <p:toolbarGroup>
+                <span class="app-brand">&#9654; Faces App</span>
+            </p:toolbarGroup>
+            <p:toolbarGroup align="right">
+                <h:panelGroup rendered="#{dashboardController.loggedIn}">
+                    <span>Welcome, #{dashboardController.loggedInUser.name}</span>
+                    <p:commandButton value="Logout"
+                                     action="#{loginController.logout}"
+                                     styleClass="p-button-text p-button-sm"
+                                     ajax="false"/>
+                </h:panelGroup>
+            </p:toolbarGroup>
+        </p:toolbar>
+
+        <!-- Main content area -->
+        <div class="app-content">
+            <ui:insert name="content"/>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&#169; 2024 Faces App – Jakarta EE 10 + JSF 4.0 + PrimeFaces 13</p>
+        </footer>
+    </div>
+
+    <p:growl id="growl" life="4000" showDetail="true"/>
+
+</h:body>
+</html>
