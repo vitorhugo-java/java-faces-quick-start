@@ -31,7 +31,7 @@
         <!-- Spring Batch + Spring Framework -->
         <spring.version>6.1.14</spring.version>
         <spring.batch.version>5.1.2</spring.batch.version>
-        <spring.security.crypto.version>6.3.4</spring.security.crypto.version>
+        <spring.security.crypto.version>6.3.8</spring.security.crypto.version>
 
         <!-- dotenv -->
         <dotenv.version>3.0.0</dotenv.version>
@@ -39,7 +39,7 @@
         <!-- Test -->
         <junit.version>5.10.3</junit.version>
         <selenium.version>4.25.0</selenium.version>
-        <webdrivermanager.version>5.9.2</webdrivermanager.version>
+        <webdrivermanager.version>6.1.0</webdrivermanager.version>
         <h2.version>2.3.232</h2.version>
         <mockito.version>5.12.0</mockito.version>
     </properties>
@@ -192,7 +192,7 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.26.3</version>
+            <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
 
