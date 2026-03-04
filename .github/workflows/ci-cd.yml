@@ -20,6 +20,8 @@ jobs:
   build-and-test:
     name: Build & Unit Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     services:
       mysql:
@@ -93,6 +95,8 @@ jobs:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     continue-on-error: true   # E2E failures are reported but don't block deploy
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout source
@@ -135,6 +139,7 @@ jobs:
     needs: build-and-test            # Unit tests MUST pass
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production          # Uses GitHub environment protection rules
+    permissions: {}                  # No GITHUB_TOKEN access needed for SSH deploy
 
     steps:
       - name: Download WAR artifact
@@ -159,23 +164,25 @@ jobs:
 
       - name: Deploy WAR on WildFly (hot deploy)
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" << 'REMOTE_SCRIPT'
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            DEPLOY_PATH="${{ env.DEPLOY_PATH }}" WAR_NAME="${{ env.WAR_NAME }}" \
+            bash << 'REMOTE_SCRIPT'
             set -e
             # Remove old deployment marker / WAR
-            rm -f "$DEPLOY_PATH/${{ env.WAR_NAME }}"
-            rm -f "$DEPLOY_PATH/${{ env.WAR_NAME }}.deployed"
-            rm -f "$DEPLOY_PATH/${{ env.WAR_NAME }}.failed"
+            rm -f "${DEPLOY_PATH}/${WAR_NAME}"
+            rm -f "${DEPLOY_PATH}/${WAR_NAME}.deployed"
+            rm -f "${DEPLOY_PATH}/${WAR_NAME}.failed"
 
             # Copy the new WAR into WildFly's deployment scanner directory
-            cp /tmp/${{ env.WAR_NAME }} "$DEPLOY_PATH/${{ env.WAR_NAME }}"
+            cp "/tmp/${WAR_NAME}" "${DEPLOY_PATH}/${WAR_NAME}"
 
             echo "Waiting for WildFly to deploy the application…"
             for i in $(seq 1 30); do
-              if [ -f "$DEPLOY_PATH/${{ env.WAR_NAME }}.deployed" ]; then
+              if [ -f "${DEPLOY_PATH}/${WAR_NAME}.deployed" ]; then
                 echo "Deployment succeeded."
                 exit 0
               fi
-              if [ -f "$DEPLOY_PATH/${{ env.WAR_NAME }}.failed" ]; then
+              if [ -f "${DEPLOY_PATH}/${WAR_NAME}.failed" ]; then
                 echo "Deployment FAILED. Check WildFly logs."
                 exit 1
               fi
@@ -184,8 +191,6 @@ jobs:
             echo "Deployment timed out after 150 s."
             exit 1
           REMOTE_SCRIPT
-        env:
-          DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
 
       - name: Notify deployment success
         if: success()
