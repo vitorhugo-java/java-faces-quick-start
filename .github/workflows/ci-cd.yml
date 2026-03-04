@@ -1,0 +1,201 @@
+name: CI / CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+# ── Environment variables available to all jobs ─────────────────────────────
+env:
+  JAVA_VERSION: '17'
+  DEPLOY_PATH: '/opt/wildfly/standalone/deployments'
+  WAR_NAME: 'facesapp.war'
+
+jobs:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  #  1. Build & Unit Tests  (MANDATORY – must pass before any deployment)
+  # ════════════════════════════════════════════════════════════════════════════
+  build-and-test:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: facesapp_test
+          MYSQL_USER: facesapp_user
+          MYSQL_PASSWORD: testpassword
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Create a minimal .env so the application can read DB config during tests
+      - name: Create .env for tests
+        run: |
+          cat > .env << 'EOF'
+          DB_URL=jdbc:mysql://localhost:3306/facesapp_test?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+          DB_USERNAME=facesapp_user
+          DB_PASSWORD=testpassword
+          APP_BASE_URL=http://localhost:8080/facesapp
+          APP_SECRET_KEY=ci-secret-key-not-used-in-production
+          MAIL_HOST=smtp.example.com
+          MAIL_PORT=587
+          MAIL_USERNAME=ci@example.com
+          MAIL_PASSWORD=ci-password
+          MAIL_FROM=no-reply@example.com
+          EMAIL_VERIFICATION_REQUIRED=true
+          CLEANUP_CRON=0 0 3 * * *
+          EOF
+
+      - name: Build & run unit tests
+        run: mvn --batch-mode clean verify -DskipE2E=true
+        env:
+          MAVEN_OPTS: "-Xmx1g"
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: target/surefire-reports/
+
+      - name: Upload WAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: facesapp-war
+          path: target/${{ env.WAR_NAME }}
+
+  # ════════════════════════════════════════════════════════════════════════════
+  #  2. E2E Tests  (optional – only on main branch, requires a running server)
+  # ════════════════════════════════════════════════════════════════════════════
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    continue-on-error: true   # E2E failures are reported but don't block deploy
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Set up Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Download WAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: facesapp-war
+          path: target/
+
+      - name: Run E2E tests
+        run: mvn --batch-mode verify -Pe2e
+        env:
+          APP_BASE_URL: ${{ secrets.E2E_APP_URL }}
+
+      - name: Upload E2E test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-reports
+          path: target/failsafe-reports/
+
+  # ════════════════════════════════════════════════════════════════════════════
+  #  3. Deploy to WildFly via SSH  (only after all tests pass on main)
+  # ════════════════════════════════════════════════════════════════════════════
+  deploy:
+    name: Deploy to WildFly (SSH)
+    runs-on: ubuntu-latest
+    needs: build-and-test            # Unit tests MUST pass
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production          # Uses GitHub environment protection rules
+    permissions: {}                  # No GITHUB_TOKEN access needed for SSH deploy
+
+    steps:
+      - name: Download WAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: facesapp-war
+          path: ./deploy/
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload WAR to remote server
+        run: |
+          scp ./deploy/${{ env.WAR_NAME }} \
+              "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/${{ env.WAR_NAME }}"
+
+      - name: Deploy WAR on WildFly (hot deploy)
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            DEPLOY_PATH="${{ env.DEPLOY_PATH }}" WAR_NAME="${{ env.WAR_NAME }}" \
+            bash << 'REMOTE_SCRIPT'
+            set -e
+            # Remove old deployment marker / WAR
+            rm -f "${DEPLOY_PATH}/${WAR_NAME}"
+            rm -f "${DEPLOY_PATH}/${WAR_NAME}.deployed"
+            rm -f "${DEPLOY_PATH}/${WAR_NAME}.failed"
+
+            # Copy the new WAR into WildFly's deployment scanner directory
+            cp "/tmp/${WAR_NAME}" "${DEPLOY_PATH}/${WAR_NAME}"
+
+            echo "Waiting for WildFly to deploy the application…"
+            for i in $(seq 1 30); do
+              if [ -f "${DEPLOY_PATH}/${WAR_NAME}.deployed" ]; then
+                echo "Deployment succeeded."
+                exit 0
+              fi
+              if [ -f "${DEPLOY_PATH}/${WAR_NAME}.failed" ]; then
+                echo "Deployment FAILED. Check WildFly logs."
+                exit 1
+              fi
+              sleep 5
+            done
+            echo "Deployment timed out after 150 s."
+            exit 1
+          REMOTE_SCRIPT
+
+      - name: Notify deployment success
+        if: success()
+        run: echo "✅ ${{ env.WAR_NAME }} deployed successfully to ${{ secrets.DEPLOY_HOST }}"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: echo "❌ Deployment failed! Check the logs above."

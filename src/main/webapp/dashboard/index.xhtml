@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<ui:composition template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="title">Dashboard – Faces App</ui:define>
+
+    <ui:define name="content">
+
+        <!-- Auth guard: redirect to login if not signed in -->
+        <f:metadata>
+            <f:viewAction action="#{dashboardController.isLoggedIn() ? null : '/login?faces-redirect=true'}"/>
+        </f:metadata>
+
+        <div class="dashboard-container">
+            <p:panel header="Dashboard">
+                <h1>Welcome, #{dashboardController.loggedInUser.name}!</h1>
+                <p>You are successfully logged in.</p>
+                <p><strong>E-mail:</strong> #{dashboardController.loggedInUser.email}</p>
+                <p><strong>Account created:</strong>
+                   #{dashboardController.loggedInUser.createdAt}</p>
+
+                <p:commandButton value="Sign Out"
+                                 action="#{dashboardController.logout}"
+                                 ajax="false"
+                                 icon="pi pi-sign-out"
+                                 styleClass="p-button-danger"/>
+            </p:panel>
+        </div>
+
+    </ui:define>
+
+</ui:composition>
+</html>

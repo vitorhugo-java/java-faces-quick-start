@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<ui:composition template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="title">Create Account – Faces App</ui:define>
+
+    <ui:define name="content">
+        <div class="auth-container">
+            <p:card styleClass="auth-card">
+                <f:facet name="header">
+                    <h2>Create Account</h2>
+                </f:facet>
+
+                <h:form id="registerForm">
+                    <p:messages showDetail="true" closable="true"/>
+
+                    <div class="field">
+                        <p:outputLabel for="name" value="Full Name"/>
+                        <p:inputText id="name"
+                                     value="#{registerController.name}"
+                                     required="true"
+                                     requiredMessage="Name is required."
+                                     styleClass="w-full"/>
+                        <p:message for="name"/>
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="email" value="E-mail"/>
+                        <p:inputText id="email"
+                                     value="#{registerController.email}"
+                                     required="true"
+                                     requiredMessage="E-mail is required."
+                                     styleClass="w-full">
+                            <f:validateRegex pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"/>
+                        </p:inputText>
+                        <p:message for="email"/>
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="password" value="Password"/>
+                        <p:password id="password"
+                                    value="#{registerController.password}"
+                                    required="true"
+                                    requiredMessage="Password is required."
+                                    feedback="true"
+                                    styleClass="w-full"/>
+                        <p:message for="password"/>
+                    </div>
+
+                    <div class="field">
+                        <p:outputLabel for="confirmPassword" value="Confirm Password"/>
+                        <p:password id="confirmPassword"
+                                    value="#{registerController.confirmPassword}"
+                                    required="true"
+                                    requiredMessage="Please confirm your password."
+                                    feedback="false"
+                                    styleClass="w-full"/>
+                        <p:message for="confirmPassword"/>
+                    </div>
+
+                    <div class="field-actions">
+                        <p:commandButton id="registerBtn"
+                                         value="Create Account"
+                                         action="#{registerController.register}"
+                                         ajax="false"
+                                         styleClass="p-button-primary w-full"/>
+                    </div>
+
+                    <div class="auth-links">
+                        <h:link value="Already have an account? Sign in" outcome="/login"/>
+                    </div>
+                </h:form>
+            </p:card>
+        </div>
+    </ui:define>
+
+</ui:composition>
+</html>

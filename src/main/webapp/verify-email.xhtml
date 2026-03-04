@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+<ui:composition template="/WEB-INF/templates/layout.xhtml">
+
+    <ui:define name="title">Verify E-mail – Faces App</ui:define>
+
+    <ui:define name="content">
+        <div class="auth-container">
+            <p:card styleClass="auth-card">
+                <f:facet name="header">
+                    <h2>E-mail Verification</h2>
+                </f:facet>
+
+                <f:metadata>
+                    <f:viewParam name="token" value="#{verifyEmailController.token}"/>
+                    <f:viewAction action="#{verifyEmailController.verify}"/>
+                </f:metadata>
+
+                <p:messages showDetail="true" closable="true"/>
+
+                <h:panelGroup rendered="#{verifyEmailController.verified}">
+                    <p:panel styleClass="success-panel">
+                        <p>&#10003; #{verifyEmailController.message}</p>
+                        <h:link value="Go to Sign In" outcome="/login"
+                                styleClass="p-button p-button-primary"/>
+                    </p:panel>
+                </h:panelGroup>
+
+                <h:panelGroup rendered="#{!verifyEmailController.verified}">
+                    <p:panel styleClass="error-panel">
+                        <p>&#10007; #{verifyEmailController.message}</p>
+                        <h:link value="Back to Sign In" outcome="/login"
+                                styleClass="p-button p-button-secondary"/>
+                    </p:panel>
+                </h:panelGroup>
+
+            </p:card>
+        </div>
+    </ui:define>
+
+</ui:composition>
+</html>
