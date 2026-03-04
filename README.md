@@ -26,6 +26,7 @@ A production-ready **Jakarta EE 10 kickstarter** for building Java Faces applica
 | Jakarta EE API | **Jakarta EE 10** (JSF 4.0, CDI 4, JPA 3.1) |
 | UI Components | **PrimeFaces 13.0.10** (`jakarta` classifier) |
 | ORM | **Hibernate 6.4** (bundled in WAR) |
+| Schema migrations | **Flyway 10** |
 | Database | **MySQL 8** |
 | Password hashing | **jBCrypt 0.4** (BCrypt work factor 12) |
 | Scheduled cleanup | **Quartz 2.3.2** |
@@ -112,7 +113,8 @@ java-faces-quick-start/
     │   │       ├── AuthFilter.java                 ← @WebFilter: guards /dashboard/*
     │   │       └── PasswordUtil.java               ← BCrypt hash / verify
     │   ├── resources/
-    │   │   └── META-INF/persistence.xml            ← JPA unit "FacesAppPU"
+    │   │   ├── META-INF/persistence.xml            ← JPA unit "FacesAppPU"
+    │   │   └── db/migration/                        ← Flyway SQL migrations
     │   └── webapp/
     │       ├── login.xhtml
     │       ├── register.xhtml
@@ -181,7 +183,7 @@ GRANT ALL PRIVILEGES ON facesapp.* TO 'facesapp_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-> Hibernate's `hbm2ddl.auto=update` creates all tables automatically on first startup.
+> Flyway runs automatically on startup and applies `src/main/resources/db/migration` scripts in version order.
 
 ### 3. Build the WAR
 

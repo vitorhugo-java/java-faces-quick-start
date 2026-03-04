@@ -25,6 +25,9 @@
         <!-- Hibernate (JPA implementation bundled in the WAR) -->
         <hibernate.version>6.4.10.Final</hibernate.version>
 
+        <!-- Flyway -->
+        <flyway.version>10.17.3</flyway.version>
+
         <!-- MySQL -->
         <mysql.version>8.3.0</mysql.version>
 
@@ -82,6 +85,18 @@
                     <artifactId>jboss-logging</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- ── Flyway Database Migrations ─────────────────────────────────── -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
 
         <!-- ── dotenv-java (read .env file) ───────────────────────────── -->

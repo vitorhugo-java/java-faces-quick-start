@@ -4,6 +4,7 @@ import com.example.facesapp.config.EnvConfig;
 import com.example.facesapp.model.PasswordResetToken;
 import com.example.facesapp.model.User;
 import com.example.facesapp.model.VerificationToken;
+import org.flywaydb.core.Flyway;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,6 +30,14 @@ public class UserRepository {
 
     @PostConstruct
     public void init() {
+        Flyway.configure()
+            .dataSource(env.getDbUrl(), env.getDbUsername(), env.getDbPassword())
+            .locations("classpath:db/migration")
+            .baselineOnMigrate(true)
+            .baselineVersion("1")
+            .load()
+            .migrate();
+
         java.util.Map<String, Object> props = new java.util.HashMap<>();
         props.put("jakarta.persistence.jdbc.url",      env.getDbUrl());
         props.put("jakarta.persistence.jdbc.user",     env.getDbUsername());
