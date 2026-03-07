@@ -13,6 +13,10 @@ import jakarta.enterprise.inject.spi.CDI;
 @ApplicationScoped
 public class EnvConfig {
 
+    private static final String DEFAULT_DB_URL = "jdbc:mysql://localhost:3306/facesapp?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String DEFAULT_DB_USERNAME = "root";
+    private static final String DEFAULT_DB_PASSWORD = "root";
+
     private Dotenv dotenv;
 
     @PostConstruct
@@ -23,26 +27,37 @@ public class EnvConfig {
     }
 
     public String get(String key) {
-        return dotenv.get(key);
+        String value = dotenv != null ? dotenv.get(key) : null;
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+
+        value = System.getenv(key);
+        if (value != null && !value.isBlank()) {
+            return value;
+        }
+
+        value = System.getProperty(key);
+        return (value != null && !value.isBlank()) ? value : null;
     }
 
     public String get(String key, String defaultValue) {
-        String val = dotenv.get(key);
+        String val = get(key);
         return (val != null && !val.isBlank()) ? val : defaultValue;
     }
 
     // ── convenience accessors ────────────────────────────────────────────────
 
     public String getDbUrl() {
-        return get("DB_URL");
+        return get("DB_URL", DEFAULT_DB_URL);
     }
 
     public String getDbUsername() {
-        return get("DB_USERNAME");
+        return get("DB_USERNAME", DEFAULT_DB_USERNAME);
     }
 
     public String getDbPassword() {
-        return get("DB_PASSWORD");
+        return get("DB_PASSWORD", DEFAULT_DB_PASSWORD);
     }
 
     public String getAppBaseUrl() {
