@@ -36,3 +36,4 @@ target/
 .project
 .settings/
 *.eclipse
+.vscode/settings.json
